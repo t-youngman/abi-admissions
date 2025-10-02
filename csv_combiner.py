@@ -164,6 +164,7 @@ def combine_csv_files(csv_files, output_file="combined_abi_data.csv", region_nam
             if i > 0:
                 df = df.iloc[1:]  # Remove first row (header)
             
+            
             combined_dataframes.append(df)
             total_rows += len(df)
             print(f"  [OK] Added {len(df)} rows (total: {total_rows})")
@@ -319,6 +320,7 @@ def combine_regional_files(regional_files, output_dir):
             # Skip the header row (first row) for all files except the first
             if i > 0:
                 df = df.iloc[1:]  # Remove first row (header)
+            
             
             combined_dataframes.append(df)
             total_rows += len(df)

@@ -11,6 +11,8 @@ specific requirements:
 5. Delete the second row
 6. Remove text after underscore in first two columns
 7. Replace the cell at the first row of the third column with 'Organisation'
+8. Standardize Financial Year formatting to YYYY-YY format
+9. Process Total_Count rows (change to 'unknown' and zero numeric values)
 
 Author: Computational Social Scientist
 Date: 2025
@@ -21,6 +23,102 @@ import numpy as np
 import os
 from pathlib import Path
 import glob
+import re
+
+
+def standardize_financial_year(year_string):
+    """
+    Standardize financial year formatting to YYYY-YY format.
+    
+    Args:
+        year_string (str): Financial year string in various formats
+        
+    Returns:
+        str: Standardized financial year in YYYY-YY format
+    """
+    if pd.isna(year_string) or not year_string:
+        return year_string
+    
+    year_str = str(year_string).strip()
+    
+    # Pattern to match YYYY-YYYY format
+    full_year_pattern = r'^(\d{4})-(\d{4})$'
+    match = re.match(full_year_pattern, year_str)
+    
+    if match:
+        start_year = int(match.group(1))
+        end_year = int(match.group(2))
+        
+        # Convert to YYYY-YY format
+        end_year_short = str(end_year)[-2:]
+        return f"{start_year}-{end_year_short}"
+    
+    # If already in YYYY-YY format or other format, return as is
+    return year_str
+
+
+def process_total_count_rows(df):
+    """
+    Process rows where the organisation column equals 'Total_Count':
+    1. Change 'Total_Count' to 'unknown' in the organisation column
+    2. Set all numeric values between All_ABI__Female_Count and Other_disorders_Total_Rate to zero
+    
+    Args:
+        df (pd.DataFrame): DataFrame to process (read with header=None)
+        
+    Returns:
+        pd.DataFrame: Processed DataFrame with Total_Count rows modified
+    """
+    if df.empty:
+        return df
+    
+    # Find the organisation column by looking at the first row (header row)
+    org_column_idx = None
+    for i in range(len(df.columns)):
+        if str(df.iloc[0, i]).strip() == 'Organisation':
+            org_column_idx = i
+            break
+    
+    if org_column_idx is None:
+        print("  [WARNING] Cannot process Total_Count rows - organisation column not found")
+        return df
+    
+    # Find the start and end columns for numeric data
+    start_col_idx = None
+    end_col_idx = None
+    
+    for i in range(len(df.columns)):
+        col_name = str(df.iloc[0, i]).strip()
+        if col_name == 'All_ABI__Female_Count':
+            start_col_idx = i
+        elif col_name == 'Other_disorders_Total_Rate':
+            end_col_idx = i
+            break
+    
+    if start_col_idx is None or end_col_idx is None:
+        print("  [WARNING] Cannot find numeric column range - skipping Total_Count processing")
+        return df
+    
+    # Count rows to process
+    total_count_rows = 0
+    
+    # Process rows where organisation = 'Total_Count'
+    # Skip the header row (index 0) when processing
+    for row_idx in range(1, len(df)):
+        if str(df.iloc[row_idx, org_column_idx]).strip() == 'Total_Count':
+            # Change 'Total_Count' to 'unknown'
+            df.iloc[row_idx, org_column_idx] = 'unknown'
+            
+            # Set all numeric columns to zero
+            for col_idx in range(start_col_idx, end_col_idx + 1):
+                df.iloc[row_idx, col_idx] = 0
+            
+            total_count_rows += 1
+    
+    if total_count_rows > 0:
+        print(f"  [PROCESS] Modified {total_count_rows} rows: 'Total_Count' -> 'unknown' and zeroed numeric values")
+    
+    return df
 
 
 def process_csv_file(file_path):
@@ -114,6 +212,19 @@ def process_csv_file(file_path):
         original_value = df.iloc[0, 2] if pd.notna(df.iloc[0, 2]) else ""
         df.iloc[0, 2] = 'Organisation'
         print(f"  Replaced third column header '{original_value}' with 'Organisation'")
+    
+    # Step 8: Standardize Financial Year formatting to YYYY-YY format
+    # Process the first column (Financial Year column) for all rows except header
+    for row_idx in range(1, len(df)):
+        if pd.notna(df.iloc[row_idx, 0]):
+            original_value = str(df.iloc[row_idx, 0])
+            standardized_value = standardize_financial_year(original_value)
+            if original_value != standardized_value:
+                df.iloc[row_idx, 0] = standardized_value
+                print(f"  Standardized Financial Year: '{original_value}' -> '{standardized_value}'")
+    
+    # Step 9: Process Total_Count rows (change to 'unknown' and zero numeric values)
+    df = process_total_count_rows(df)
     
     print(f"  Final shape: {df.shape}")
     return df
