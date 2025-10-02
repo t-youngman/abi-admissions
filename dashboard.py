@@ -14,9 +14,15 @@ st.set_page_config(
 )
 
 @st.cache_data
-def load_data():
+def load_data(cache_key=None):
     """Load and prepare the England ABI admissions data."""
-    df = pd.read_csv('processed_data/England.csv')
+    import os
+    file_path = 'processed_data/England.csv'
+    if os.path.exists(file_path):
+        df = pd.read_csv(file_path)
+    else:
+        st.error("Data file not found. Please run the data processing pipeline first.")
+        st.stop()
     
     # Clean column names - handle the space in "Meningitis_Total _Rate"
     df.columns = df.columns.str.strip()
@@ -31,8 +37,10 @@ def load_data():
     
     return df
 
-# Load data
-df = load_data()
+# Load data with cache key based on file modification time
+import os
+cache_key = os.path.getmtime('processed_data/England.csv') if os.path.exists('processed_data/England.csv') else 0
+df = load_data(cache_key)
 
 # Title and introduction
 st.title("🏥 Acquired Brain Injury (ABI) Hospital Admissions in England")
@@ -84,6 +92,7 @@ with tab1:
         (df['Year_Start'] <= year_range[1]) &
         (df['Region'].isin(selected_regions))
     ]
+    
      
     # Show selection info based on view mode
     if view_mode == "England":
@@ -127,19 +136,23 @@ with tab1:
         'Year_Start': 'first'
     }).reset_index().sort_values('Year_Start')
     
-    # Create stacked bar chart
+    
+    
+    # Create stacked bar chart using the working configuration
     fig_trends = go.Figure()
     fig_trends.add_trace(go.Bar(
         x=yearly_data['FinancialYear'], 
         y=yearly_data['All_ABI__Female_Count'],
         name='Female',
-        marker_color='#FF6B9D'
+        marker_color='#FF6B9D',
+        customdata=list(zip(yearly_data['All_ABI__Male_Count'], yearly_data['All_ABI__Total_Count'])),
     ))
     fig_trends.add_trace(go.Bar(
         x=yearly_data['FinancialYear'], 
         y=yearly_data['All_ABI__Male_Count'],
         name='Male',
-        marker_color='#4D96FF'
+        marker_color='#4D96FF',
+        customdata=list(zip(yearly_data['All_ABI__Female_Count'], yearly_data['All_ABI__Total_Count'])),
     ))
     
     fig_trends.update_layout(
@@ -148,9 +161,14 @@ with tab1:
         yaxis_title="Number of Admissions",
         barmode='stack',
         hovermode='x unified',
-        height=400,
-        xaxis={'tickangle': -45}
+        height=500,
+        xaxis={
+            'type': 'category', 
+            'categoryorder': 'array', 
+            'categoryarray': yearly_data['FinancialYear'].tolist()
+        }
     )
+    
     st.plotly_chart(fig_trends, use_container_width=True)
 
     # Regional comparison - only show if more than one region is selected
@@ -235,7 +253,12 @@ with tab1:
     
     fig_injury_count.update_layout(
         barmode='stack',
-        xaxis={'tickangle': -45},
+        xaxis={
+            'tickangle': -45,
+            'type': 'category', 
+            'categoryorder': 'array', 
+            'categoryarray': sorted(filtered_df['FinancialYear'].unique())
+        },
         height=500,
         hovermode='x unified',
         legend=dict(
@@ -262,7 +285,12 @@ with tab1:
     
     fig_injury_pct.update_layout(
         barmode='stack',
-        xaxis={'tickangle': -45},
+        xaxis={
+            'tickangle': -45,
+            'type': 'category', 
+            'categoryorder': 'array', 
+            'categoryarray': sorted(filtered_df['FinancialYear'].unique())
+        },
         yaxis={'range': [0, 100]},
         height=500,
         hovermode='x unified',
