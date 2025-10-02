@@ -1,17 +1,17 @@
 # ABI Admissions Dashboard
 
-An interactive Streamlit dashboard for visualizing Acquired Brain Injury (ABI) admissions statistics across UK regions, with an automated data processing pipeline for transforming raw Excel files into analysis-ready datasets.
+An interactive Streamlit dashboard for visualizing Acquired Brain Injury (ABI) admissions statistics across England regions and organisations, with an automated data processing pipeline for transforming raw Excel files into analysis-ready datasets.
 
 ## Overview
 
 This project consists of two main components:
 
 1. **Data Processing Pipeline**: Automated scripts that extract, transform, and combine ABI admissions data from Excel files
-2. **Interactive Dashboard**: Streamlit-based visualization tool for exploring the processed data
+2. **Interactive Dashboard**: Streamlit-based visualization tool for exploring the processed data at both regional and organisational levels
 
-The system processes ABI admissions data from Excel files in the `raw_data/` folder, including:
-- Regional England data (London, South West, East Midlands, West Midlands, etc.)
-- UK-wide data (England, Scotland, Wales, Northern Ireland, and UK totals)
+The system processes ABI admissions data from Excel files in the `england_data/` folder, covering all England regions:
+- East, East Midlands, London, North East, North West
+- South East, South West, West Midlands, Yorkshire and Humberside
 
 ### Important Caveat
 
@@ -19,85 +19,113 @@ The system processes ABI admissions data from Excel files in the `raw_data/` fol
 
 ## Features
 
-- **Interactive Visualizations**: Trend charts, regional comparisons, and heatmaps
-- **Geographical Mapping**: NUTS1 boundary maps with choropleth visualization
-- **Data Processing**: Automatically handles complex Excel formatting and extracts meaningful data
-- **Regional Analysis**: Compare statistics across different UK regions
-- **Temporal Analysis**: Track trends over financial years
-- **Data Export**: Download filtered data as CSV files
-- **Multiple Map Types**: Static matplotlib maps and interactive Folium maps
+### Interactive Dashboard
+
+- **Two-Tab Interface**:
+  - **England by region**: Aggregate regional analysis with toggle between all England or filtered regions
+  - **In your area**: Organisation-level analysis filtered by regime type (PCT, CCG, ICB) and region
+
+- **Rich Visualizations**:
+  - Stacked bar charts showing female/male admission trends over time
+  - Injury type analysis with both count and percentage breakdowns
+  - Regional and organisational comparison charts
+  - Gender distribution pie charts and grouped bar charts
+  - Interactive Plotly charts with hover details
+
+- **Advanced Filtering**:
+  - Year range selection with slider
+  - Multi-select region filtering
+  - Regime type filtering (PCT, CCG, ICB)
+  - Region-based organisation filtering
+  - Multi-organisation comparison support
+
+- **Data Analysis Features**:
+  - Key metrics display (total admissions, average rates, gender breakdown)
+  - Conditional analysis sections (only show when multiple regions/organisations selected)
+  - Text wrapping for long organisation names in charts
+  - Downloadable filtered datasets as CSV
+
+- **Injury Type Coverage**:
+  - Head injuries
+  - Stroke
+  - Meningitis
+  - Brain tumours
+  - Other disorders
+  - Abscess
+  - Anoxia
+  - CO poisoning
+
+### Data Processing Pipeline
+
+- **Automated Excel Processing**: Handles complex multi-sheet workbooks
+- **Intelligent Header Detection**: Automatically standardizes scattered headers
+- **Metadata Enrichment**: Adds regime type, financial year, and organisation columns
+- **Multi-stage Transformation**: Three-stage pipeline for robust data cleaning
 
 ## Installation
 
-1. Install the required dependencies:
+1. Clone the repository or download the project files
+
+2. Install the required dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. For geographical mapping functionality, install additional dependencies:
-```bash
-python install_geographical_deps.py
-```
-
-   Or manually install:
-```bash
-pip install geopandas matplotlib folium contextily shapely fiona pyproj
-```
-
-3. Ensure the Excel files are in the same directory as the dashboard files.
+3. Ensure the Excel files are in the `england_data/` directory
 
 ## Usage
 
-### Basic ABI Admissions Dashboard
+### Running the Dashboard
 
-To visualize the processed ABI admissions data:
-
-```bash
-streamlit run abi_dashboard.py
-```
-
-### Enhanced Dashboard with Geographical Mapping
-
-For the full experience with NUTS1 boundary maps:
+To launch the interactive dashboard:
 
 ```bash
-streamlit run enhanced_abi_dashboard.py
-```
-
-The enhanced dashboard provides:
-- Time series analysis of admissions trends
-- Regional comparisons across UK regions
-- **Geographical mapping with NUTS1 boundaries**
-- **Interactive and static map visualizations**
-- Injury type breakdowns (Head injuries, Stroke, Meningitis, etc.)
-- Gender-based analysis
-- Interactive filters for year range and regions
-- Downloadable filtered datasets
-
-### Full UK Dashboard (if available)
-
-For the complete UK analysis:
-
-```bash
-streamlit run abi_dashboard.py
+streamlit run dashboard.py
 ```
 
 The dashboard will open in your web browser at `http://localhost:8501`.
 
-### Dashboard Controls
+### Dashboard Navigation
 
-- **Select Regions**: Choose which UK regions to include in visualizations
-- **Select Primary Metric**: Choose the main metric for trend analysis
-- **Select Metrics for Heatmap**: Choose multiple metrics for heatmap visualization
-- **Select Year for Comparison**: Choose a specific year for regional comparison
+#### England by Region Tab
 
-### Visualizations
+**Filters (Sidebar)**:
+- **View Mode**: Toggle between "England" (all regions) or "By Regions" (filtered)
+- **Select Regions**: Multi-select regions (only shown when "By Regions" is selected)
+- **Select Year Range**: Slider to filter by financial year range
 
-1. **Key Statistics**: Overview metrics including total records, regions covered, and years covered
-2. **Trend Analysis**: Line charts showing how selected metrics change over time
-3. **Regional Comparison**: Bar charts comparing regions for a specific year
-4. **Regional Heatmap**: Heatmap showing multiple metrics across regions and years
-5. **Raw Data Table**: Filtered data table with download capability
+**Visualizations**:
+- Key metrics overview
+- Trends over time (stacked bar chart: Female/Male)
+- Regional analysis (shown when multiple regions selected):
+  - Total admissions by region
+  - Average admission rate by region
+- Injury type analysis over time:
+  - Count stacked bar chart
+  - Percentage stacked bar chart
+- Gender/sex analysis:
+  - Distribution pie chart
+  - Top injury types by sex
+- Detailed data table with download
+
+#### In Your Area Tab
+
+**Filters (Sidebar)**:
+- **Select Regime Type**: Choose PCT, CCG, or ICB
+- **Select Region**: Filter organisations by region (or "All")
+- **Select Organisation(s)**: Multi-select organisations within the chosen regime and region
+- **Select Year Range**: Slider to filter by available years
+
+**Visualizations**:
+- Organisation information header
+- Key metrics overview
+- Trends over time (stacked bar chart)
+- Organisation comparison (shown when multiple organisations selected):
+  - Total admissions by organisation
+  - Average admission rate by organisation
+- Injury type analysis over time (count and percentage)
+- Gender/sex analysis
+- Detailed data table with download
 
 ## Data Processing Pipeline
 
@@ -106,7 +134,7 @@ The project includes a three-stage automated data processing pipeline that trans
 ### Stage 1: Excel Processing (`excel_processor.py`)
 
 Extracts and transforms data from Excel files:
-- Reads all Excel files from `raw_data/` folder
+- Reads all Excel files from `england_data/` folder
 - Extracts the second sheet (regional data) from each file
 - Removes the top 6 header rows
 - Replaces 'Other disorders' text with standardized 'Other_disorders'
@@ -144,6 +172,7 @@ Combines year files and creates master datasets:
 
 **Output**: 
 - Regional combined files in each subfolder
+- Regional total files (`Regional_total.csv`)
 - Master `England.csv` file containing all regions and years
 
 ### Running the Pipeline
@@ -166,55 +195,94 @@ python csv_combiner.py
 ```
 processed_data/
 ├── England.csv                    # Master file with all regions
-├── South_West/
-│   ├── South_West.csv            # Regional combined file
+├── East/
+│   ├── East.csv                  # Regional combined file
+│   ├── Regional_total.csv        # Regional totals
 │   ├── 2006_07.csv               # Individual year files
 │   ├── 2007_08.csv
-│   └── Regional_total.csv
+│   └── ...
+├── East_Midlands/
+│   ├── East_Midlands.csv
+│   ├── Regional_total.csv
+│   └── ...
 ├── London/
 │   ├── London.csv
-│   ├── 2006_07.csv
+│   ├── Regional_total.csv
 │   └── ...
-└── [Other Regions]/
+├── North_East/
+│   └── ...
+├── North_West/
+│   └── ...
+├── South_East/
+│   └── ...
+├── South_West/
+│   └── ...
+├── West_Midlands/
+│   └── ...
+└── Yorkshire_and_Humberside/
     └── ...
 ```
-
-### Legacy Data Processor
-
-The `data_processor.py` module provides additional data handling capabilities:
-- Automatically detects header rows in non-standard Excel layouts
-- Cleans and standardizes column names
-- Converts numeric data appropriately
-- Handles missing values and formatting inconsistencies
 
 ## File Structure
 
 ```
-├── raw_data/                      # Source Excel files
+├── england_data/                 # Source Excel files
 │   ├── london-residents-abi-admissions.xlsx
 │   ├── south-west-residents-abi-admissions.xlsx
 │   ├── east-midlands-residents-abi-admissions.xlsx
-│   └── ...
-├── processed_data/                # Processed CSV files (generated)
-│   ├── England.csv               # Master combined file
-│   └── [Region]/                 # Region-specific subfolders
-│       ├── [Region].csv          # Regional combined file
-│       └── [Year].csv            # Individual year files
-├── excel_processor.py            # Stage 1: Excel extraction and transformation
-├── csv_processor.py              # Stage 2: CSV header standardization
-├── csv_combiner.py               # Stage 3: Data combination
-├── abi_dashboard.py              # Main Streamlit dashboard
-├── data_processor.py             # Legacy data processing module
-├── requirements.txt              # Python dependencies
-└── README.md                     # This file
+│   └── ... (all 9 regional Excel files)
+├── processed_data/               # Processed CSV files (generated)
+│   ├── England.csv              # Master combined file
+│   └── [Region]/                # Region-specific subfolders
+│       ├── [Region].csv         # Regional combined file
+│       ├── Regional_total.csv   # Regional totals
+│       └── [Year].csv           # Individual year files
+├── excel_processor.py           # Stage 1: Excel extraction and transformation
+├── csv_processor.py             # Stage 2: CSV header standardization
+├── csv_combiner.py              # Stage 3: Data combination
+├── dashboard.py                 # Main Streamlit dashboard
+├── requirements.txt             # Python dependencies
+└── README.md                    # This file
 ```
 
 ## Technical Details
 
 - **Framework**: Streamlit for the web interface
-- **Visualization**: Plotly for interactive charts
+- **Visualization**: Plotly for interactive charts (with text wrapping support)
 - **Data Processing**: Pandas for data manipulation
 - **Excel Handling**: openpyxl for Excel file processing
+- **Data Caching**: Streamlit's `@st.cache_data` decorator for performance
+
+### Key Technical Features
+
+- **Responsive Design**: Charts adapt to container width
+- **Dynamic Filtering**: Filters update based on data availability
+- **Conditional Rendering**: Analysis sections only shown when relevant
+- **Text Wrapping**: Long organisation names automatically wrap across multiple lines
+- **Data Type Handling**: Automatic conversion of numeric columns with error coercion
+- **Year Extraction**: Financial years parsed to extract start year for sorting
+
+## Data Structure
+
+### Columns in Processed Data
+
+**Metadata**:
+- `Region`: England region name
+- `Organisation`: Healthcare organisation name
+- `FinancialYear`: Financial year (e.g., "2006-07")
+- `Regime`: Organisation type (PCT, CCG, or ICB)
+- `Year_Start`: Extracted start year for sorting (e.g., 2006)
+
+**Injury Types** (each with Female_Count, Male_Count, Total_Count, Female_Rate, Male_Rate, Total_Rate):
+- All_ABI (All acquired brain injuries)
+- Head_injuries
+- Stroke
+- Meningitis
+- Brain_tumour
+- Other_disorders
+- Abscess
+- Anoxia
+- CO_poisoning (Carbon monoxide poisoning)
 
 ## Notes
 
@@ -222,20 +290,64 @@ The `data_processor.py` module provides additional data handling capabilities:
 - The processor automatically handles these formatting challenges
 - Data is cached for improved performance on subsequent loads
 - All visualizations are interactive and responsive
+- Regime types are determined by year:
+  - 2006-2012: PCT (Primary Care Trust)
+  - 2013-2021: CCG (Clinical Commissioning Group)
+  - 2022+: ICB (Integrated Care Board)
 
 ## Troubleshooting
 
 If you encounter issues:
 
-1. Ensure all Excel files are present in the working directory
-2. Check that all dependencies are installed: `pip install -r requirements.txt`
-3. Verify the Excel files are not corrupted or password-protected
-4. Check the console output for any data processing warnings
+1. **Missing Data File**: Ensure `processed_data/England.csv` exists
+   - If not, run the data processing pipeline (excel_processor.py → csv_processor.py → csv_combiner.py)
+
+2. **Excel Files Not Found**: Check that all 9 regional Excel files are in the `england_data/` folder
+
+3. **Dependencies Issues**: Reinstall dependencies
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Deprecation Warnings**: Ensure you're using a stable Streamlit version
+   ```bash
+   pip install streamlit==1.28.0
+   ```
+
+5. **Data Type Errors**: The pipeline automatically handles data type conversion, but ensure Excel files are not corrupted
+
+6. **Port Already in Use**: If port 8501 is busy, specify a different port:
+   ```bash
+   streamlit run dashboard.py --server.port 8502
+   ```
 
 ## Contributing
 
 This dashboard is designed to be easily extensible. You can:
-- Add new visualization types in the dashboard
+- Add new visualization types to the dashboard tabs
 - Modify the data processing logic for different Excel formats
 - Add new metrics or filtering options
-- Customize the styling and layout
+- Customize the color schemes and styling
+- Add additional analysis sections (e.g., age groups, ethnicity if available)
+- Extend to include UK-wide data (Scotland, Wales, Northern Ireland)
+
+## Future Enhancements
+
+Potential improvements:
+- [ ] Add geographical mapping with NUTS1 boundaries
+- [ ] Include predictive analytics and trend forecasting
+- [ ] Add year-over-year comparison features
+- [ ] Implement custom date range selection
+- [ ] Add export to PDF/PowerPoint functionality
+- [ ] Include statistical significance testing
+- [ ] Add data quality indicators and completeness metrics
+
+## License
+
+This project is designed for analysis of public health data. Please ensure appropriate data handling and privacy considerations when deploying or sharing.
+
+## Data Source
+
+**Data Source**: NHS England ABI Admissions Data (Regional Statistics)  
+**Dashboard created with**: Streamlit & Plotly  
+**Processing Pipeline**: Python with Pandas, openpyxl
