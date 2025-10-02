@@ -20,10 +20,7 @@ def load_data():
     
     # Clean column names - handle the space in "Meningitis_Total _Rate"
     df.columns = df.columns.str.strip()
-    
-    # Filter out regional total rows to avoid double-counting
-    df = df[df['Organisation'] != 'Total_Count'].copy()
-    
+     
     # Convert numeric columns to proper numeric types
     numeric_cols = [col for col in df.columns if 'Count' in col or 'Rate' in col]
     for col in numeric_cols:
